@@ -7,7 +7,7 @@
         "Enabled": false,
         "HitboxBufferLengthInMs": 200,
         "HitboxDefaultCapacity": 512,
-        "CachedStaticCollidersSize": 64
+        "CachedStaticCollidersSize": 8
     },
     "PhysicsForecast": false,
     "EnqueueIncompleteSynchronousSpawns": false,
