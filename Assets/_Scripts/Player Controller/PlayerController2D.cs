@@ -1,5 +1,6 @@
 using Fusion;
 using UnityEngine;
+using ChaseTheCoin.Manager;
 
 namespace ChaseTheCoin.Player
 {
@@ -28,6 +29,14 @@ namespace ChaseTheCoin.Player
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
+            
+            // Ensure Physics2D ignores collisions between players
+            int playerLayer = LayerMask.NameToLayer("Player");
+            if (playerLayer != -1)
+            {
+                gameObject.layer = playerLayer; // Set this game object to Player layer
+                Physics2D.IgnoreLayerCollision(playerLayer, playerLayer, true);
+            }
         }
 
         public override void FixedUpdateNetwork()
@@ -35,6 +44,24 @@ namespace ChaseTheCoin.Player
             // Only apply inputs if we successfully get them from Fusion (valid for both Host/Server and the local client predicting)
             if (GetInput(out NetworkInputData data))
             {
+                bool canMove = true;
+                if (GlobalManagers.Instance != null)
+                {
+                    var timer = GlobalManagers.Instance.GetManager<TimerManager>();
+                    if (timer != null && timer.State != MatchState.Playing)
+                    {
+                        canMove = false;
+                    }
+                }
+
+                if (!canMove)
+                {
+                    // Keep gravity but block horizontal input
+                    _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
+                    
+                    return;
+                }
+
                 // --- MOVEMENT ---
                 // We directly set velocity on X axis based on input.
                 _rb.linearVelocity = new Vector2(data.MovementInput * moveSpeed, _rb.linearVelocity.y);
@@ -48,6 +75,7 @@ namespace ChaseTheCoin.Player
                 else
                 {
                     // Fallback just in case ground check isn't setup
+                    // Increased tolerance from 0.01f to 0.1f because Unity physics often has micro-fluctuations in Y velocity when resting or sliding on colliders.
                     isGrounded = Mathf.Abs(_rb.linearVelocity.y) < 0.01f;
                 }
 

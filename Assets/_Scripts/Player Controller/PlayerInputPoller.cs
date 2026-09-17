@@ -4,6 +4,7 @@ using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using ChaseTheCoin.Manager;
 
 namespace ChaseTheCoin.Player
 {
@@ -19,7 +20,7 @@ namespace ChaseTheCoin.Player
         
         [Tooltip("Action for jumping. Expected to be a Button type. Useful for Mobile On-Screen Button.")]
         [SerializeField] private InputActionReference jumpAction;
-
+        
         private float _localMoveInput;
         private bool _localJumpInput;
 

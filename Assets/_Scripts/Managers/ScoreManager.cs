@@ -9,8 +9,6 @@ namespace ChaseTheCoin.Manager
     /// </summary>
     public class ScoreManager : NetworkBehaviour, IManager
     {
-        public static ScoreManager Instance { get; private set; }
-
         // Tracks the score for each player. The capacity must be set to the max players.
         [Networked, Capacity(2)]
         public NetworkDictionary<PlayerRef, int> PlayerScores => default;
@@ -29,26 +27,28 @@ namespace ChaseTheCoin.Manager
                 Runner.Despawn(Object);
             }
         }
-
-        /// <summary>
-        /// Context Menu function to quickly test the score system in the editor.
-        /// It will add a score to the first active player it finds.
-        /// </summary>
-        [ContextMenu("Test Add Score")]
-        public void TestAddScore()
+        
+        [ContextMenu("Add Local Score")]
+        public void AddLocalScore()
         {
-            if (Runner != null)
+            if (Runner == null) return;
+            
+            AddScore(Runner.LocalPlayer, 1);
+
+            Debug.Log($"Local player({Runner.LocalPlayer} score incremented by 1)");
+        }
+        
+        [ContextMenu("Add Opponent Score")]
+        public void AddOpponentScore()
+        {
+            if (Runner == null) return;
+
+            foreach (var player in Runner.ActivePlayers)
             {
-                foreach (var player in Runner.ActivePlayers)
-                {
-                    AddScore(player, 1);
-                    break;
-                }
+                if(Runner.LocalPlayer !=  player) AddScore(player, 1);
             }
-            else
-            {
-                Debug.LogWarning("[ScoreManager] Runner is null. Ensure you are in play mode and connected.");
-            }
+
+            Debug.Log($"Oppnent({Runner.LocalPlayer} score incremented by 1)");
         }
 
         /// <summary>
@@ -73,6 +73,18 @@ namespace ChaseTheCoin.Manager
             }
 
             Debug.Log($"[ScoreManager] Player {player.PlayerId} score is now {PlayerScores.Get(player)}");
+        }
+
+        /// <summary>
+        /// Gets the current score for a specific player.
+        /// </summary>
+        public int GetScore(PlayerRef player)
+        {
+            if (PlayerScores.TryGet(player, out int score))
+            {
+                return score;
+            }
+            return 0;
         }
 
         /// <summary>
