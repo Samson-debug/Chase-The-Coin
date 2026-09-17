@@ -27,7 +27,7 @@ namespace ChaseTheCoin.UI
         private void Start()
         {
             _networkRunnerController = GlobalManagers.Instance.GetManager<NetworkRunnerController>();
-            _networkRunnerController.OnPlayerJoinedSuccessfully += Hide;
+            _networkRunnerController.OnBothPlayerJoinedSuccessfully += Hide;
             _networkRunnerController.OnConnectFailedOccurred += Hide;
             _networkRunnerController.OnShutdownOccurred += Hide;
             
@@ -41,7 +41,7 @@ namespace ChaseTheCoin.UI
             if (cancelButton) cancelButton.onClick.RemoveAllListeners();
             if (_networkRunnerController != null)
             {
-                _networkRunnerController.OnPlayerJoinedSuccessfully -= Hide;
+                _networkRunnerController.OnBothPlayerJoinedSuccessfully -= Hide;
                 _networkRunnerController.OnConnectFailedOccurred -= Hide;
                 _networkRunnerController.OnShutdownOccurred -= Hide;
             }

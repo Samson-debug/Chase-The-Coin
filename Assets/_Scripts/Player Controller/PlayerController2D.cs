@@ -1,6 +1,7 @@
 using Fusion;
 using UnityEngine;
 using ChaseTheCoin.Manager;
+using Fusion.Addons.Physics;
 
 namespace ChaseTheCoin.Player
 {
@@ -17,9 +18,15 @@ namespace ChaseTheCoin.Player
         [SerializeField] private LayerMask groundLayer;
 
         private Rigidbody2D _rb;
+        private Vector3 _spawnPosition;
+        
+        private TimerManager _timerManager;
         
         [Networked]
         private NetworkButtons _previousButtons { get; set; }
+        
+        [Networked]
+        private NetworkBool _isRespawning { get; set; }
 
         public enum InputButtons
         {
@@ -29,44 +36,66 @@ namespace ChaseTheCoin.Player
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
-            
-            // Ensure Physics2D ignores collisions between players
-            int playerLayer = LayerMask.NameToLayer("Player");
-            if (playerLayer != -1)
+        }
+
+        public override void Spawned()
+        {
+            _spawnPosition = transform.position;
+
+            if (GlobalManagers.Instance != null)
             {
-                gameObject.layer = playerLayer; // Set this game object to Player layer
-                Physics2D.IgnoreLayerCollision(playerLayer, playerLayer, true);
+                _timerManager = GlobalManagers.Instance.GetManager<TimerManager>();
+                if (_timerManager == null)
+                {
+                    GlobalManagers.Instance.OnManagerRegistered += HandleManagerRegistered;
+                }
+            }
+        }
+
+        private void HandleManagerRegistered(IManager newManager)
+        {
+            if (newManager is TimerManager timerManager)
+            {
+                _timerManager = timerManager;
+                GlobalManagers.Instance.OnManagerRegistered -= HandleManagerRegistered;
+            }
+        }
+
+        public override void Despawned(NetworkRunner runner, bool hasState)
+        {
+            if (GlobalManagers.Instance != null)
+            {
+                GlobalManagers.Instance.OnManagerRegistered -= HandleManagerRegistered;
             }
         }
 
         public override void FixedUpdateNetwork()
         {
-            // Only apply inputs if we successfully get them from Fusion (valid for both Host/Server and the local client predicting)
+            /*if (_isRespawning)
+            {
+                Respawn();
+                if (HasStateAuthority)
+                {
+                    _isRespawning = false;
+                }
+            }
+            */
+
             if (GetInput(out NetworkInputData data))
             {
-                bool canMove = true;
-                if (GlobalManagers.Instance != null)
-                {
-                    var timer = GlobalManagers.Instance.GetManager<TimerManager>();
-                    if (timer != null && timer.State != MatchState.Playing)
-                    {
-                        canMove = false;
-                    }
-                }
+                bool canMove = !(_timerManager != null && _timerManager.State != MatchState.Playing);
 
                 if (!canMove)
                 {
-                    // Keep gravity but block horizontal input
                     _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
                     
                     return;
                 }
 
-                // --- MOVEMENT ---
-                // We directly set velocity on X axis based on input.
+                // Movement
                 _rb.linearVelocity = new Vector2(data.MovementInput * moveSpeed, _rb.linearVelocity.y);
 
-                // --- JUMPING ---
+                // Jumping
                 bool isGrounded = false;
                 if (groundCheck != null)
                 {
@@ -74,8 +103,7 @@ namespace ChaseTheCoin.Player
                 }
                 else
                 {
-                    // Fallback just in case ground check isn't setup
-                    // Increased tolerance from 0.01f to 0.1f because Unity physics often has micro-fluctuations in Y velocity when resting or sliding on colliders.
+                    // Fallback
                     isGrounded = Mathf.Abs(_rb.linearVelocity.y) < 0.01f;
                 }
 
@@ -91,8 +119,31 @@ namespace ChaseTheCoin.Player
                 _previousButtons = data.Buttons;
             }
         }
+
+        private void Respawn()
+        {
+            var nt = GetComponent<NetworkRigidbody>();
+            if (nt != null)
+            {
+                nt.Teleport(_spawnPosition);
+            }
+            
+            _rb.linearVelocity = Vector2.zero;
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (!HasStateAuthority) return;
+
+            if (other.gameObject.layer == LayerMask.NameToLayer("World Edge"))
+            {
+                //_isRespawning = true;
+                Respawn();
+            }
+        }
+
+        #region Debug
         
-        // Optional: Draw Gizmos for ground check
         private void OnDrawGizmosSelected()
         {
             if (groundCheck != null)
@@ -101,5 +152,6 @@ namespace ChaseTheCoin.Player
                 Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
             }
         }
+        #endregion
     }
 }

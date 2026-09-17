@@ -20,10 +20,9 @@ namespace ChaseTheCoin.Manager
         public event Action<MatchState> OnStateChanged;
 
         [Header("Settings")]
-        [SerializeField] private float countdownDuration = 5f; // 3, 2, 1, Go! (approx 3.7s from animator)
+        [SerializeField] private float countdownDuration = 5f;
         [SerializeField] private float matchDuration = 60f;
-
-        // Tracks previous state for detecting changes on clients
+        
         private MatchState _previousState;
 
         public override void Spawned()
@@ -43,10 +42,7 @@ namespace ChaseTheCoin.Manager
         
         private void OnDestroy()
         {
-            if (GlobalManagers.Instance != null)
-            {
-                GlobalManagers.Instance.UnregisterManager(this);
-            }
+            GlobalManagers.Instance?.UnregisterManager(this);
         }
 
         public override void Render()
@@ -65,15 +61,12 @@ namespace ChaseTheCoin.Manager
             switch (State)
             {
                 case MatchState.WaitingForPlayers:
-                    // Check if both players are present
-                    // Using 2 as the expected player count
+                    //if both players are present
                     int playerCount = 0;
                     foreach(var _ in Runner.ActivePlayers) playerCount++;
                     
-                    if (playerCount == 2)
-                    {
-                        StartCountdown();
-                    }
+                    if (playerCount == 2) StartCountdown();
+                    
                     break;
 
                 case MatchState.Countdown:
@@ -91,7 +84,7 @@ namespace ChaseTheCoin.Manager
                     break;
 
                 case MatchState.Finished:
-                    // Handle post-match logic here
+                    //noop
                     break;
             }
         }
@@ -126,19 +119,6 @@ namespace ChaseTheCoin.Manager
                 return remainingTime.HasValue ? remainingTime.Value : 0f;
             }
             return 0f;
-        }
-
-        [ContextMenu("Test Start Countdown")]
-        public void TestStartCountdown()
-        {
-            if (HasStateAuthority)
-            {
-                StartCountdown();
-            }
-            else
-            {
-                Debug.LogWarning("[TimerManager] Only the State Authority (Host/Server) can manually start the countdown.");
-            }
         }
     }
 }

@@ -4,7 +4,6 @@ using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using ChaseTheCoin.Manager;
 
 namespace ChaseTheCoin.Player
 {
@@ -15,10 +14,7 @@ namespace ChaseTheCoin.Player
     public class PlayerInputPoller : NetworkBehaviour, INetworkRunnerCallbacks
     {
         [Header("Input Settings (New Input System)")]
-        [Tooltip("Action for moving. Expected to be a Value type (Vector2). Useful for Mobile On-Screen Stick.")]
         [SerializeField] private InputActionReference moveAction;
-        
-        [Tooltip("Action for jumping. Expected to be a Button type. Useful for Mobile On-Screen Button.")]
         [SerializeField] private InputActionReference jumpAction;
         
         private float _localMoveInput;
@@ -26,13 +22,13 @@ namespace ChaseTheCoin.Player
 
         public override void Spawned()
         {
-            // Only the local player (Input Authority) should poll their local input
+            //only local player
             if (HasInputAuthority)
             {
                 Runner.AddCallbacks(this);
                 
-                if (moveAction != null) moveAction.action.Enable();
-                if (jumpAction != null) jumpAction.action.Enable();
+                moveAction?.action.Enable();
+                jumpAction?.action.Enable();
             }
         }
 
@@ -42,8 +38,8 @@ namespace ChaseTheCoin.Player
             {
                 Runner.RemoveCallbacks(this);
                 
-                if (moveAction != null) moveAction.action.Disable();
-                if (jumpAction != null) jumpAction.action.Disable();
+                moveAction?.action.Disable();
+                jumpAction?.action.Disable();
             }
         }
 
@@ -51,17 +47,14 @@ namespace ChaseTheCoin.Player
         {
             if (!HasInputAuthority) return;
 
-            // Read Movement (Using Axis Control Type - 1D float)
             if (moveAction != null)
             {
                 _localMoveInput = moveAction.action.ReadValue<float>();
             }
 
-            // Read Jump Button
             if (jumpAction != null)
             {
-                // IsPressed returns true as long as the button is held down.
-                // Fusion's NetworkButtons handles tracking the "WasPressed" state cleanly in FixedUpdateNetwork.
+                //IsPressed returns true as long as the button is held down.
                 _localJumpInput = jumpAction.action.IsPressed();
             }
         }
@@ -88,7 +81,6 @@ namespace ChaseTheCoin.Player
         public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
         public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
         public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
-        public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
         public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ReadOnlySpan<byte> data) { }
         public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { }
         public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }

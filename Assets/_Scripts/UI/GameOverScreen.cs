@@ -1,8 +1,10 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion;
 using ChaseTheCoin.Manager;
+using UnityEngine.SceneManagement;
 
 namespace ChaseTheCoin.UI
 {
@@ -26,16 +28,12 @@ namespace ChaseTheCoin.UI
                 homeButton.onClick.AddListener(OnHomeButtonClicked);
             }
             
-            // Start hidden
-            if (gameOverPanel != null)
-            {
-                gameOverPanel.SetActive(false);
-            }
+            gameOverPanel?.SetActive(false);
 
             StartCoroutine(GetDependenciesRoutine());
         }
 
-        private System.Collections.IEnumerator GetDependenciesRoutine()
+        private IEnumerator GetDependenciesRoutine()
         {
             // Wait until managers are registered in GlobalManagers
             while (_timerManager == null || _scoreManager == null || _networkRunnerController == null)
@@ -45,20 +43,15 @@ namespace ChaseTheCoin.UI
                 if (_networkRunnerController == null) _networkRunnerController = GlobalManagers.Instance.GetManager<NetworkRunnerController>();
                 yield return null;
             }
-
-            // Dependencies acquired, safely subscribe
+            
             _timerManager.OnStateChanged += HandleStateChanged;
             
-            // Check if it's already finished (in case we loaded late)
             HandleStateChanged(_timerManager.State);
         }
 
         private void OnDestroy()
         {
-            if (homeButton != null)
-            {
-                homeButton.onClick.RemoveListener(OnHomeButtonClicked);
-            }
+            homeButton?.onClick.RemoveListener(OnHomeButtonClicked);
 
             if (_timerManager != null)
             {
@@ -76,18 +69,14 @@ namespace ChaseTheCoin.UI
 
         private void ShowGameOverScreen()
         {
-            if (gameOverPanel != null)
-            {
-                gameOverPanel.SetActive(true);
-            }
+            gameOverPanel?.SetActive(true);
 
             int localScore = 0;
             int opponentScore = 0;
 
             if (_networkRunnerController != null && _networkRunnerController.IsActive)
             {
-                // Find the active NetworkRunner instance
-                var runner = FindObjectOfType<NetworkRunner>();
+                var runner = FindFirstObjectByType<NetworkRunner>();
                 
                 if (runner != null)
                 {
@@ -129,15 +118,11 @@ namespace ChaseTheCoin.UI
 
         private void OnHomeButtonClicked()
         {
-            // First, cancel matchmaking which shuts down Fusion cleanly
-            if (_networkRunnerController != null)
-            {
-                _networkRunnerController.CancelMatchmaking();
-            }
+            _networkRunnerController?.CancelMatchmaking();
 
             // Then, immediately load the Main Menu scene.
-            // (Assumes Main Menu is Scene 0, which is standard for ChaseTheCoin based on gameplay scene index being 1)
-            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+            const int Main_Menu_Scene_Index = 0;
+            SceneManager.LoadScene(Main_Menu_Scene_Index);
         }
     }
 }

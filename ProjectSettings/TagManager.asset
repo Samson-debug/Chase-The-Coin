@@ -13,7 +13,7 @@ TagManager:
   - UI
   - Platform
   - Player
-  - 
+  - World Edge
   - 
   - 
   - 
@@ -38,8 +38,17 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Platform
+    uniqueID: 1532337085
+    locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Interactable
+    uniqueID: 1360471543
+    locked: 0
+  - name: Player
+    uniqueID: 385906861
     locked: 0
   m_RenderingLayers:
   - Default

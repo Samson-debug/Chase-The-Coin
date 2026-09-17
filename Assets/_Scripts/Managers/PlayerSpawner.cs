@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
@@ -6,35 +7,24 @@ namespace ChaseTheCoin.Manager
     /// <summary>
     /// Placed in the Gameplay scene. Spawns player prefabs when the scene loads.
     /// </summary>
-    public class PlayerSpawner : NetworkBehaviour, IPlayerJoined, IPlayerLeft, ISceneLoadDone
+    public class PlayerSpawner : NetworkBehaviour, IPlayerLeft
     {
         [Header("Prefabs")]
         [SerializeField] private NetworkPrefabRef playerPrefab;
 
         [Header("Spawn Points")]
-        [Tooltip("Assign 2 spawn points for the 2 players")]
         [SerializeField] private Transform[] spawnPoints;
 
-        // Keep track of spawned players to clean them up if they leave
-        private readonly System.Collections.Generic.Dictionary<PlayerRef, NetworkObject> _spawnedCharacters = new();
+        private Dictionary<PlayerRef, NetworkObject> _spawnedCharacters = new();
 
-
-        public void SceneLoadDone(in SceneLoadDoneArgs sceneInfo)
+        public override void Spawned()
         {
             if (!Runner.IsServer) return;
 
             foreach (var player in Runner.ActivePlayers)
             {
                 SpawnPlayer(player);
-            }
-        }
-
-        public void PlayerJoined(PlayerRef player)
-        {
-            if (!Runner.IsServer) return;
-            
-            // If a player joins late (if allowed), spawn them too
-            SpawnPlayer(player);
+            };
         }
 
         public void PlayerLeft(PlayerRef player)
@@ -51,7 +41,7 @@ namespace ChaseTheCoin.Manager
 
         private void SpawnPlayer(PlayerRef player)
         {
-            // Avoid spawning twice for the same player
+            //avoid spawning multiple times
             if (_spawnedCharacters.ContainsKey(player)) return;
 
             // Determine spawn position based on player index

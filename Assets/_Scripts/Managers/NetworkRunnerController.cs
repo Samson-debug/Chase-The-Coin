@@ -16,8 +16,7 @@ namespace ChaseTheCoin.Manager
     public class NetworkRunnerController : MonoBehaviour, IManager, INetworkRunnerCallbacks
     {
         public event Action OnMatchmakingStarted;
-        public event Action<string> OnSessionConnected;
-        public event Action OnPlayerJoinedSuccessfully;
+        public event Action OnBothPlayerJoinedSuccessfully;
         public event Action OnShutdownOccurred;
         public event Action OnConnectFailedOccurred;
         
@@ -45,13 +44,10 @@ namespace ChaseTheCoin.Manager
 
         public void Initialize()
         {
-            Debug.Log("[NetworkRunnerController] Initialize");
-            
             bool success = GlobalManagers.Instance.RegisterManager(this, true);
 
             if (!success)
             {
-                Debug.Log("[NetworkRunnerController] Failed to register the manager. Destroying it!");
                 Destroy(gameObject);
             }
         }
@@ -61,8 +57,7 @@ namespace ChaseTheCoin.Manager
             Debug.Log("[NetworkRunnerController] OnDestroy");
             
             CleanupActiveRunner();
-            
-            GlobalManagers.Instance.UnregisterManager(this);
+            GlobalManagers.Instance?.UnregisterManager(this);
         }
 
         public async Task StartGameAsync(GameMode mode, string roomCode)
@@ -125,7 +120,6 @@ namespace ChaseTheCoin.Manager
                 else
                 {
                     Debug.Log($"[NetworkRunnerController] Started game in {mode} mode with Session: {_activeRunner.SessionInfo.Name}");
-                    OnSessionConnected?.Invoke(_activeRunner.SessionInfo.Name);
                 }
             }
             catch (Exception ex)
@@ -190,7 +184,7 @@ namespace ChaseTheCoin.Manager
             // Check if both players have joined the session
             if (runner.ActivePlayers.Count() == 2)
             {
-                OnPlayerJoinedSuccessfully?.Invoke();
+                OnBothPlayerJoinedSuccessfully?.Invoke();
 
                 if (runner.IsServer)
                 {

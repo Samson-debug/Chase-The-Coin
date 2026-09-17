@@ -27,16 +27,6 @@ namespace ChaseTheCoin.UI
             StartCoroutine(GetDependenciesRoutine());
         }
 
-        private void OnDestroy()
-        {
-            if (_timerManager) _timerManager.OnStateChanged -= HandleStateChanged;
-            
-            if (GlobalManagers.Instance != null)
-            {
-                GlobalManagers.Instance.UnregisterManager(this);
-            }
-        }
-
         public void Initialize()
         {
             GlobalManagers.Instance.RegisterManager(this);
@@ -44,7 +34,6 @@ namespace ChaseTheCoin.UI
 
         private IEnumerator GetDependenciesRoutine()
         {
-            //Wait until managers are registered
             while (_scoreManager == null || _timerManager == null)
             {
                 if (_scoreManager == null)
@@ -55,10 +44,16 @@ namespace ChaseTheCoin.UI
 
                 yield return null;
             }
-
-            // Dependencies acquired, safely subscribe
+            
             _timerManager.OnStateChanged += HandleStateChanged;
             HandleStateChanged(_timerManager.State);
+        }
+
+        private void OnDestroy()
+        {
+            if (_timerManager) _timerManager.OnStateChanged -= HandleStateChanged;
+            
+            GlobalManagers.Instance?.UnregisterManager(this);
         }
 
         private void HandleStateChanged(MatchState newState)
@@ -114,17 +109,17 @@ namespace ChaseTheCoin.UI
             if (_timerManager.State == MatchState.Playing)
             {
                 float time = _timerManager.GetRemainingTime();
-                int minutes = Mathf.FloorToInt(time / 60F);
-                int seconds = Mathf.FloorToInt(time - minutes * 60);
+                int minutes = Mathf.FloorToInt(time / 60f);
+                int seconds = Mathf.FloorToInt(time % 60f);
                 
                 if (timerText != null)
                 {
-                    timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+                    timerText.text = $"{minutes:00}:{seconds:00}";
                 }
             }
             else if (_timerManager.State == MatchState.WaitingForPlayers)
             {
-                if (timerText != null) timerText.text = "WAITING";
+                if (timerText != null) timerText.text = "00:00";
             }
         }
     }

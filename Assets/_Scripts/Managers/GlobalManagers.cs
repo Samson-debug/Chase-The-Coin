@@ -9,6 +9,9 @@ namespace ChaseTheCoin.Manager
     {
         public static GlobalManagers Instance { get; private set; }
         
+        public event Action<IManager> OnManagerRegistered;
+        public event Action<IManager> OnManagerUnregistered;
+        
         private Dictionary<Type, IManager> _managers = new Dictionary<Type, IManager>();
 
         private void Awake()
@@ -22,11 +25,6 @@ namespace ChaseTheCoin.Manager
             {
                 Destroy(gameObject);
             }
-        }
-
-        private void OnDestroy()
-        {
-            Debug.Log("[GlobalManagers] OnDestroy");
         }
 
         public bool RegisterManager(IManager manager, bool persistent = false)
@@ -44,6 +42,8 @@ namespace ChaseTheCoin.Manager
                 Debug.LogWarning($"[RegisterManager] {type.Name} is already registered. Ignoring duplicate.");
                 return false;
             }
+
+            OnManagerRegistered?.Invoke(manager);
 
             if (persistent)
             {
@@ -81,7 +81,9 @@ namespace ChaseTheCoin.Manager
 
             if (_managers.TryGetValue(type, out IManager registeredManager) && ReferenceEquals(registeredManager, manager))
             {
-                return _managers.Remove(type);
+                bool removed = _managers.Remove(type);
+                if (removed) OnManagerUnregistered?.Invoke(manager);
+                return removed;
             }
 
             return false;
