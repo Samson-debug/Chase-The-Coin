@@ -11,10 +11,12 @@ namespace ChaseTheCoin.Interactables
         [SerializeField] private float pickupRadius = 0.5f;
         [SerializeField] private LayerMask playerLayer;
 
+        [Networked] private NetworkBool _isCollected { get; set; }
+
         public override void FixedUpdateNetwork()
         {
             // Only the server handles the collection logic to prevent discrepancies
-            if (!HasStateAuthority) return;
+            if (!HasStateAuthority || _isCollected) return;
 
             // Check for players in range
             Collider2D col = Physics2D.OverlapCircle(transform.position, pickupRadius, playerLayer);
@@ -24,6 +26,8 @@ namespace ChaseTheCoin.Interactables
                 var playerController = col.GetComponent<PlayerController2D>();
                 if (playerController != null)
                 {
+                    _isCollected = true;
+
                     // Add score
                     PlayerRef playerRef = playerController.Object.InputAuthority;
                     var scoreManager = GlobalManagers.Instance.GetManager<ScoreManager>();
@@ -31,18 +35,19 @@ namespace ChaseTheCoin.Interactables
                     {
                         scoreManager.AddScore(playerRef, 1);
                     }
-
-                    // Spawn new coin
+                    // Queue coin reposition after 1 second
                     var coinManager = GlobalManagers.Instance.GetManager<CoinManager>();
                     if (coinManager != null)
                     {
-                        coinManager.SpawnCoin();
+                        coinManager.QueueSpawnCoin(1f);
                     }
-
-                    // Despawn this coin
-                    Runner.Despawn(Object);
                 }
             }
+        }
+
+        public void ResetCoin()
+        {
+            _isCollected = false;
         }
 
         private void OnDrawGizmosSelected()

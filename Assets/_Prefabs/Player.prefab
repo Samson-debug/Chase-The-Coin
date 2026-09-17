@@ -513,7 +513,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChaseTheCoin.Player.PlayerController2D
   moveSpeed: 3
-  jumpForce: 5
+  jumpForce: 7
   groundCheck: {fileID: 8620507991983573975}
   groundCheckRadius: 0.2
   groundLayer:

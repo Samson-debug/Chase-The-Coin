@@ -40,16 +40,26 @@ namespace ChaseTheCoin.Manager
                 Runner.Despawn(Object);
             }
         }
-
-        public override void FixedUpdateNetwork()
+        
+        private void OnDestroy()
         {
-            // State change detection for events
+            if (GlobalManagers.Instance != null)
+            {
+                GlobalManagers.Instance.UnregisterManager(this);
+            }
+        }
+
+        public override void Render()
+        {
             if (_previousState != State)
             {
                 OnStateChanged?.Invoke(State);
                 _previousState = State;
             }
+        }
 
+        public override void FixedUpdateNetwork()
+        {
             if (!HasStateAuthority) return;
 
             switch (State)

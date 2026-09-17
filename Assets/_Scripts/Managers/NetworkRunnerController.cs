@@ -45,16 +45,21 @@ namespace ChaseTheCoin.Manager
 
         public void Initialize()
         {
+            Debug.Log("[NetworkRunnerController] Initialize");
+            
             bool success = GlobalManagers.Instance.RegisterManager(this, true);
 
             if (!success)
             {
+                Debug.Log("[NetworkRunnerController] Failed to register the manager. Destroying it!");
                 Destroy(gameObject);
             }
         }
 
         private void OnDestroy()
         {
+            Debug.Log("[NetworkRunnerController] OnDestroy");
+            
             CleanupActiveRunner();
             
             GlobalManagers.Instance.UnregisterManager(this);

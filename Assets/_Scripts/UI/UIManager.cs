@@ -30,6 +30,11 @@ namespace ChaseTheCoin.UI
         private void OnDestroy()
         {
             if (_timerManager) _timerManager.OnStateChanged -= HandleStateChanged;
+            
+            if (GlobalManagers.Instance != null)
+            {
+                GlobalManagers.Instance.UnregisterManager(this);
+            }
         }
 
         public void Initialize()

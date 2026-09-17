@@ -28,6 +28,14 @@ namespace ChaseTheCoin.Manager
             }
         }
         
+        private void OnDestroy()
+        {
+            if (GlobalManagers.Instance != null)
+            {
+                GlobalManagers.Instance.UnregisterManager(this);
+            }
+        }
+        
         [ContextMenu("Add Local Score")]
         public void AddLocalScore()
         {

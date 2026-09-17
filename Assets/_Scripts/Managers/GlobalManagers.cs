@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,6 +22,11 @@ namespace ChaseTheCoin.Manager
             {
                 Destroy(gameObject);
             }
+        }
+
+        private void OnDestroy()
+        {
+            Debug.Log("[GlobalManagers] OnDestroy");
         }
 
         public bool RegisterManager(IManager manager, bool persistent = false)
@@ -64,14 +69,22 @@ namespace ChaseTheCoin.Manager
                 return managerObject as T;
             }
 
-            Debug.LogError($"GetManager: {type.Name} is not registered.");
+            Debug.LogWarning($"GetManager: {type.Name} is not registered yet.");
             return null;
         }
         
         public bool UnregisterManager(IManager manager)
         {
             if (manager == null) return false;
-            return _managers.Remove(manager.GetType());
+
+            Type type = manager.GetType();
+
+            if (_managers.TryGetValue(type, out IManager registeredManager) && ReferenceEquals(registeredManager, manager))
+            {
+                return _managers.Remove(type);
+            }
+
+            return false;
         }
         
         #region Debug
