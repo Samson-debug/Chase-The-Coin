@@ -41,7 +41,6 @@ namespace ChaseTheCoin.UI
             if (cancelButton) cancelButton.onClick.RemoveAllListeners();
             if (_networkRunnerController != null)
             {
-                _networkRunnerController.OnBothPlayerJoinedSuccessfully -= Hide;
                 _networkRunnerController.OnConnectFailedOccurred -= Hide;
                 _networkRunnerController.OnShutdownOccurred -= Hide;
             }
