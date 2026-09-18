@@ -87,22 +87,13 @@ Coin spawning and collection are fully **host-authoritative** to prevent cheatin
 3. **Score update:** On collection, `ScoreManager.AddScore()` is called. If the caller is not the State Authority, an RPC (`Rpc_AddScore`) forwards the request to the host, which updates the `NetworkDictionary<PlayerRef, int>`. The updated scores are then automatically replicated to all clients.
 4. **Visual feedback:** An `[Rpc(StateAuthority → All)]` call (`RpcShowScorePopup`) triggers a local "+1" popup animation on all clients at the coin's world position.
 
-### Why This Is Consistent
-- All spawn positions, collection checks, and score mutations happen on the **host's simulation tick**, eliminating race conditions.
-- `NetworkBool`, `NetworkDictionary`, and `TickTimer` are Fusion `[Networked]` properties, meaning their values are part of the replicated state snapshot — clients always see the authoritative view.
-- `NetworkTransform.Teleport()` ensures the coin's position change is immediately replicated without interpolation artifacts.
-
 ---
 
 ## Assumptions
 
-- The game is designed for **exactly 2 players**. `PlayerCount` is set to 2 in `StartGameArgs`, and match logic (countdown, game-over) triggers when 2 active players are detected.
-- Players are expected to be on a **reliable internet connection**. No offline or LAN-only mode is implemented.
 - The game uses a **flat 2D arena** with predefined spawn points placed in the scene. Level design is static and not procedurally generated.
 - **Room codes** must be at least 4 characters long (enforced by `MainMenuManager`). Auto Join bypasses room codes entirely by using Fusion's default session matchmaking.
 - The host is assumed to remain connected for the full duration of the match. **Host migration** is not implemented.
-- Unity's **New Input System** is used. Legacy Input Manager bindings are not supported.
-- The project targets **desktop platforms** (keyboard input). Mobile/gamepad input is not explicitly configured.
 
 ---
 
@@ -110,11 +101,7 @@ Coin spawning and collection are fully **host-authoritative** to prevent cheatin
 
 - **Manager initialization order dependency:** Because networked managers (`ScoreManager`, `TimerManager`, `CoinManager`, `UIManager`) are `NetworkBehaviour`s, their `Spawned()` order is non-deterministic. Systems that depend on each other must use workarounds — `OnManagerRegistered` event subscriptions or coroutine-based polling — to safely resolve references.
 - **No host migration:** If the host disconnects mid-match, the client will be disconnected and the match is lost. There is no fallback or session recovery.
-- **No reconnection handling:** If a client disconnects and reconnects, they are not rejoined to the same session. Their previous score is lost.
 - **Player left handling:** `PlayerSpawner` implements `IPlayerLeft` to despawn the leaving player's character, but the remaining player has no UI notification or automatic match-end when the opponent leaves.
-- **Respawn mechanism (partial):** The `Respawn()` method exists in `PlayerController2D` and is triggered on "World Edge" collision, but the networked `_isRespawning` flag path is commented out. Respawn currently runs locally on the state authority without a full networked state-machine.
-- **Fixed 2-player limit:** The game does not support spectators or more than 2 players.
-- **No persistent accounts or leaderboards:** Scores are session-only and not stored between matches.
 - **Static spawn points:** Coin and player spawn points are fixed in the scene and not configurable at runtime.
 
 ---
@@ -125,24 +112,13 @@ Coin spawning and collection are fully **host-authoritative** to prevent cheatin
   - Animated **countdown sequence** ("3 → 2 → 1 → GO!") with scale punch and fade effects (`CountdownAnimator`).
   - **Game-over panel** slides in from off-screen with `Ease.OutBack` and a background fade overlay (`GameOverScreen`).
   - **Score popup** (+1) floats upward and fades out at the coin's world position, using a **static object pool** for zero-allocation reuse (`ScorePopup`).
-  - **Button hover/click micro-animations** with scale tweens on pointer events (`ButtonAnimation`).
+  - **UI micro-animations** with scale tweens (`ButtonAnimation`).
 
 - **Smart Coin Spawning:**
   - Avoids spawning at the same location consecutively.
   - Avoids spawning on top of a player by checking for colliders at spawn points.
   - Single coin object is recycled (teleported) instead of spawned/despawned each time, reducing network overhead.
 
-- **Room Code System:**
-  - Players can create private rooms with a custom code, or use Auto Join for random matchmaking.
-  - Room code validation with a configurable minimum length.
-
-- **Loading/Matchmaking UI:**
-  - A loading panel with the room code displayed while waiting for the opponent.
-  - Cancel button to abort matchmaking and cleanly shut down the NetworkRunner.
-
 - **Manager Service Locator Pattern:**
   - Clean dependency injection via `GlobalManagers` with an `IManager` interface.
   - Late-binding support through `OnManagerRegistered` events, allowing NetworkBehaviour managers to resolve each other regardless of spawn order.
-
-- **Opponent Nameplate:**
-  - A TextMeshPro label is shown above the opponent's character and hidden above the local player, helping players distinguish characters.
