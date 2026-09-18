@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7910879912755493640}
   - component: {fileID: 2013310321593785089}
   - component: {fileID: 9179553836972689993}
+  - component: {fileID: 7052866893446756719}
   m_Layer: 0
   m_Name: Coin
   m_TagString: Untagged
@@ -108,10 +109,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ddb659296fadab47b24cb07189d34a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChaseTheCoin.Interactables.Coin
-  pickupRadius: 0.5
+  pickupRadius: 0.3
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
+--- !u!95 &7052866893446756719
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4119322262540851357}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: dab612a02a9a47349a25a2e235b13362, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &5729334460116288564
 GameObject:
   m_ObjectHideFlags: 0
@@ -193,7 +216,7 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
+  m_Sprite: {fileID: 2130732594, guid: 62ed75c49d5e85a438858cae9545ab1c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

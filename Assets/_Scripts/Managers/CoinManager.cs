@@ -9,6 +9,9 @@ namespace ChaseTheCoin.Manager
         [Header("Coin Setup")] [SerializeField]
         private NetworkPrefabRef coinPrefab;
 
+        [Header("UI Setup")] [SerializeField]
+        private UI.ScorePopup scorePopupPrefab;
+
         [SerializeField] private float spawnDelay = 1f;
         [SerializeField] private Transform[] spawnPoints;
         [SerializeField] private LayerMask playerLayerMask;
@@ -99,10 +102,15 @@ namespace ChaseTheCoin.Manager
                 var spawnedObj = Runner.Spawn(coinPrefab, spawnPoint.position, spawnPoint.rotation);
                 _activeCoin = spawnedObj.GetComponent<Interactables.Coin>();
 
-                _activeCoin.OnCollected += () => QueueSpawnCoin(spawnDelay);
-
                 _activeCoinTransform = _activeCoin.GetComponent<NetworkTransform>();
                 if (!_activeCoinTransform) Debug.LogWarning("[RegisterManager] Coin has no Network Transform!");
+                
+                _activeCoin.OnCollected += () => 
+                {
+                    if (_activeCoinTransform) 
+                        RpcShowScorePopup(_activeCoinTransform.transform.position, 1);
+                    QueueSpawnCoin(spawnDelay);
+                };
             }
             else
             {
@@ -124,6 +132,15 @@ namespace ChaseTheCoin.Manager
 
             // Temporarily move the coin
             if (_activeCoinTransform) _activeCoinTransform.Teleport(new Vector3(0, -1000f, 0));
+        }
+
+        [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+        private void RpcShowScorePopup(Vector3 position, int score)
+        {
+            if (scorePopupPrefab != null)
+            {
+                UI.ScorePopup.Create(scorePopupPrefab, position, score);
+            }
         }
     }
 }

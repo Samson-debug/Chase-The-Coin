@@ -5,6 +5,7 @@ using TMPro;
 using Fusion;
 using ChaseTheCoin.Manager;
 using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 namespace ChaseTheCoin.UI
 {
@@ -17,9 +18,24 @@ namespace ChaseTheCoin.UI
         [SerializeField] private TextMeshProUGUI opponentScoreText;
         [SerializeField] private Button homeButton;
 
+        [Header("Animation")]
+        [SerializeField] private Image backgroundImage;
+        [SerializeField] private RectTransform resultPanel;
+        [SerializeField] private float backgroundFadeAmount = 0.8f;
+        [SerializeField] private float animationDuration = 0.5f;
+
         private TimerManager _timerManager;
         private ScoreManager _scoreManager;
         private NetworkRunnerController _networkRunnerController;
+        private float _panelOriginalY;
+
+        private void Awake()
+        {
+            if (resultPanel != null)
+            {
+                _panelOriginalY = resultPanel.anchoredPosition.y;
+            }
+        }
 
         private void Start()
         {
@@ -70,6 +86,20 @@ namespace ChaseTheCoin.UI
         private void ShowGameOverScreen()
         {
             gameOverPanel?.SetActive(true);
+
+            if (backgroundImage != null)
+            {
+                Color color = backgroundImage.color;
+                color.a = 0f;
+                backgroundImage.color = color;
+                backgroundImage.DOFade(backgroundFadeAmount, animationDuration).SetUpdate(true);
+            }
+
+            if (resultPanel != null)
+            {
+                resultPanel.anchoredPosition = new Vector2(resultPanel.anchoredPosition.x, -Screen.height * 1.5f);
+                resultPanel.DOAnchorPosY(_panelOriginalY, animationDuration).SetEase(Ease.OutBack).SetUpdate(true);
+            }
 
             int localScore = 0;
             int opponentScore = 0;

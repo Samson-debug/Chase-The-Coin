@@ -106,7 +106,7 @@ namespace ChaseTheCoin.Manager
                 var result = await _activeRunner.StartGame(new StartGameArgs
                 {
                     GameMode = mode,
-                    SessionName = roomCode,
+                    SessionName = string.IsNullOrEmpty(roomCode) ? null : roomCode,
                     SceneManager = sceneManager,
                     ObjectProvider = objectProvider,
                     PlayerCount = 2

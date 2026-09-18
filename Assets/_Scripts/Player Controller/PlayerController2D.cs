@@ -1,3 +1,4 @@
+using System;
 using Fusion;
 using UnityEngine;
 using ChaseTheCoin.Manager;
@@ -21,6 +22,7 @@ namespace ChaseTheCoin.Player
         private Vector3 _spawnPosition;
         
         private TimerManager _timerManager;
+        private SpriteRenderer _spriteRenderer;
         
         [Networked]
         private NetworkButtons _previousButtons { get; set; }
@@ -36,6 +38,7 @@ namespace ChaseTheCoin.Player
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
+            _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         }
 
         public override void Spawned()
@@ -50,6 +53,9 @@ namespace ChaseTheCoin.Player
                     GlobalManagers.Instance.OnManagerRegistered += HandleManagerRegistered;
                 }
             }
+
+            var opponentText = GetComponentInChildren<TMPro.TextMeshPro>(true);
+            opponentText?.gameObject.SetActive(!HasInputAuthority);
         }
 
         private void HandleManagerRegistered(IManager newManager)
@@ -120,6 +126,21 @@ namespace ChaseTheCoin.Player
             }
         }
 
+        public override void Render()
+        {
+            if (_spriteRenderer != null)
+            {
+                if (_rb.linearVelocity.x > 0.1f)
+                {
+                    _spriteRenderer.flipX = false;
+                }
+                else if (_rb.linearVelocity.x < -0.1f)
+                {
+                    _spriteRenderer.flipX = true;
+                }
+            }
+        }
+
         private void Respawn()
         {
             var nt = GetComponent<NetworkRigidbody>();
@@ -131,7 +152,7 @@ namespace ChaseTheCoin.Player
             _rb.linearVelocity = Vector2.zero;
         }
 
-        private void OnTriggerEnter2D(Collider2D other)
+        private void OnCollisionEnter2D(Collision2D other)
         {
             if (!HasStateAuthority) return;
 
